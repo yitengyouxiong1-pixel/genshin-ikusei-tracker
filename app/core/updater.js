@@ -21,8 +21,9 @@ const isVer = (v) => typeof v === 'string' && /^\d{1,4}\.\d{1,4}\.\d{1,4}$/.test
 
 async function get(url, limit) {
   if (!ALLOWED.test(url)) throw new Error('blocked-host');
-  const r = await net.fetch(url, { redirect: 'follow', cache: 'no-store', headers: { 'User-Agent': 'GenshinIkuseiTracker' } });
-  if (!ALLOWED.test(r.url)) throw new Error('blocked-host');
+  // raw.githubusercontent.com answers directly, so any redirect is refused rather than followed
+  const r = await net.fetch(url, { redirect: 'error', cache: 'no-store', headers: { 'User-Agent': 'GenshinIkuseiTracker' } });
+  if (r.url && !ALLOWED.test(r.url)) throw new Error('blocked-host');
   if (r.status === 404) throw new Error('not-found');
   if (!r.ok) throw new Error('http-' + r.status);
   const buf = Buffer.from(await r.arrayBuffer());
