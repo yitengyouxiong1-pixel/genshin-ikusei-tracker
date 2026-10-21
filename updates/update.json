@@ -1,9 +1,9 @@
 {
-  "version": "1.3.1",
-  "bundle": "core-1.3.1.bundle.gz",
-  "sha256": "e7c035b65e9b83c5e8b3cf0d6dd36fcc01f28459126984cc9785136995dc91e3",
-  "size": 479043,
+  "version": "1.4.0",
+  "bundle": "core-1.4.0.bundle.gz",
+  "sha256": "04ca067028e406b95fb5664db84d4e6273dee00a3c72f61305fbd2fe4dbe23a2",
+  "size": 481974,
   "minLauncher": "1.3.0",
-  "notes": "自動アップデートの確認がうまく動かない問題を直しました。",
+  "notes": "新しいデザイン「星図」になりました。朝・昼・夕方前・黄昏・夕焼け・夜の6つの空が、時間で自動で切りかわります。",
   "published": "2026-10-21"
 }

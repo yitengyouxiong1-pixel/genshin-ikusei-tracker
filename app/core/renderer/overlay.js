@@ -4,6 +4,7 @@
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
 const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 1c.6 5.4 2.4 8.4 11 11-8.6 2.6-10.4 5.6-11 11-.6-5.4-2.4-8.4-11-11 8.6-2.6 10.4-5.6 11-11z"/></svg>';
+document.documentElement.dataset.sky = 'night'; document.documentElement.dataset.tone = 'dark';
 let state = null, cfg = { mode: 'list', opacity: 0.94, through: false, hotkeyOk: { toggle: true, through: true } }, showDone = false;
 
 function row(it) {
@@ -55,7 +56,11 @@ document.addEventListener('click', (e) => {
     window.api.ovAction({ scope: b.dataset.scope, id: b.dataset.id, on });
   }
 });
-window.api.onOvState((s) => { state = s; render(); });
+window.api.onOvState((s) => {
+  state = s;
+  if (s.sky) { document.documentElement.dataset.sky = s.sky; document.documentElement.dataset.tone = s.tone || 'dark'; }
+  render();
+});
 window.api.onOvConfig((c) => { cfg = Object.assign(cfg, c); render(); });
 window.api.ovGetConfig().then((c) => { cfg = Object.assign(cfg, c); render(); }).catch(() => render());
 })();

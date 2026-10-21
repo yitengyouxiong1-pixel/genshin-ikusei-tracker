@@ -1,0 +1,67 @@
+/* The six skies of the day. <html data-sky="…" data-tone="light|dark"> is set by the page from the clock.
+   Shared by the main window and the in-game overlay. Every color the pages use is a token defined here. */
+:root{
+  --serif:"Yu Mincho","YuMincho","BIZ UDPMincho","Hiragino Mincho ProN","Noto Serif CJK JP",serif;
+  --sans:"Yu Gothic UI","BIZ UDPGothic","Meiryo UI","Hiragino Sans","Noto Sans CJK JP",system-ui,sans-serif;
+  --stars:radial-gradient(var(--star) .8px,transparent 1px) 0 0/34px 34px;
+  --err:#C0392B;
+  /* defaults = night */
+  color-scheme:dark;
+  --bg:#121829; --sky:radial-gradient(1200px 600px at 75% -10%,#1E2748,transparent),var(--stars);
+  --star:rgba(236,230,214,.18); --panel:rgba(255,255,255,.035); --row:rgba(255,255,255,.025); --rowline:rgba(255,255,255,.07);
+  --track:rgba(255,255,255,.08); --ink:#ECE6D6; --muted:#9EA1B4; --line:rgba(201,169,110,.34); --gold:#C9A96E; --ongold:#121829;
+  --mini:rgba(18,24,41,.94); --hl:rgba(201,169,110,.10); --head:var(--ink); --headsub:var(--gold);
+}
+/* character colors: deep set for light skies, soft set for dark skies */
+:root[data-tone="light"]{color-scheme:light;
+  --c1:#2E7EA6; --c2:#3E64A4; --c3:#2753AA; --c4:#B8552E; --c5:#A84C7A; --c6:#8A6C1E; --c7:#3F7D3A; --c8:#7A4FB0; --err:#B03A2E}
+:root[data-tone="dark"],:root:not([data-tone]){
+  --c1:#A9D3E6; --c2:#9DB9E2; --c3:#8FB0EE; --c4:#F0AE88; --c5:#E9A0C4; --c6:#E2C77A; --c7:#A9D894; --c8:#C9A8F2; --err:#FF9C8C}
+
+:root[data-sky="dawn"]{
+  --bg:linear-gradient(180deg,#D9DFF0 0%,#E9E4EE 45%,#F7E5D6 100%) fixed;
+  --sky:radial-gradient(900px 420px at 85% 105%,rgba(255,214,170,.75),transparent 70%),radial-gradient(700px 300px at 10% -10%,rgba(190,200,235,.6),transparent),var(--stars);
+  --star:rgba(70,80,130,.10); --panel:rgba(255,255,255,.55); --row:rgba(255,255,255,.5); --rowline:rgba(43,49,80,.08); --track:rgba(43,49,80,.10);
+  --ink:#2B3150; --muted:#666B8A; --line:rgba(166,128,70,.45); --gold:#A57B36; --ongold:#fff; --mini:rgba(255,255,255,.92); --hl:rgba(174,132,63,.12);
+  --head:var(--ink); --headsub:var(--gold)}
+:root[data-sky="day-gold"]{
+  --bg:linear-gradient(180deg,#9EC3E3 0%,#CADDEB 35%,#EFE6CF 72%,#F2D9A6 100%) fixed;
+  --sky:radial-gradient(900px 380px at 82% 108%,rgba(255,214,140,.55),transparent 70%),radial-gradient(600px 260px at 15% -10%,rgba(255,255,255,.7),transparent 70%),var(--stars);
+  --star:rgba(120,90,40,.06); --panel:rgba(255,253,246,.66); --row:rgba(255,255,255,.55); --rowline:rgba(90,70,40,.09); --track:rgba(90,70,40,.12);
+  --ink:#2A2A3E; --muted:#666276; --line:rgba(176,132,60,.55); --gold:#9E7027; --ongold:#fff; --mini:rgba(255,253,246,.94); --hl:rgba(169,122,44,.12);
+  --head:var(--ink); --headsub:var(--gold)}
+:root[data-sky="day-sky"]{
+  --bg:linear-gradient(180deg,#4F7FBF 0%,#7FA8D8 38%,#BFD8EE 72%,#E6F0F7 100%) fixed;
+  --sky:radial-gradient(520px 320px at 88% -6%,rgba(255,255,240,.95),rgba(255,250,225,.35) 45%,transparent 72%),radial-gradient(1400px 220px at 50% 104%,rgba(255,255,255,.75),transparent 70%),var(--stars);
+  --star:rgba(255,255,255,.10); --panel:rgba(255,255,255,.68); --row:rgba(255,255,255,.62); --rowline:rgba(30,50,90,.08); --track:rgba(30,50,90,.12);
+  --ink:#1C2846; --muted:#51607F; --line:rgba(176,138,68,.55); --gold:#9E7629; --ongold:#fff; --mini:rgba(255,255,255,.94); --hl:rgba(169,128,47,.12);
+  --head:#fff; --headsub:#FFF1CF}
+:root[data-sky="day-field"]{
+  --bg:linear-gradient(180deg,#8FBCE0 0%,#BCD9EE 40%,#E4EFEA 70%,#C9DDB5 88%,#A9C98F 100%) fixed;
+  --sky:radial-gradient(260px 70px at 18% 9%,rgba(255,255,255,.85),transparent 70%),radial-gradient(360px 90px at 30% 13%,rgba(255,255,255,.6),transparent 70%),radial-gradient(300px 80px at 78% 20%,rgba(255,255,255,.75),transparent 70%),radial-gradient(420px 100px at 66% 24%,rgba(255,255,255,.5),transparent 70%),radial-gradient(500px 300px at 92% -8%,rgba(255,252,230,.9),transparent 70%);
+  --star:transparent; --panel:rgba(255,255,255,.66); --row:rgba(255,255,255,.6); --rowline:rgba(40,70,50,.08); --track:rgba(40,70,50,.12);
+  --ink:#1F2E2B; --muted:#526863; --line:rgba(170,134,64,.55); --gold:#97722A; --ongold:#fff; --mini:rgba(255,255,255,.94); --hl:rgba(160,122,46,.12);
+  --head:var(--ink); --headsub:var(--gold)}
+:root[data-sky="akane"]{
+  --bg:linear-gradient(180deg,#8FA9D6 0%,#C3B9DA 34%,#EBC3B8 64%,#F2A889 88%,#E98C6C 100%) fixed;
+  --sky:radial-gradient(900px 340px at 22% 110%,rgba(255,196,140,.7),transparent 70%),radial-gradient(700px 260px at 90% -10%,rgba(255,255,255,.45),transparent 70%),var(--stars);
+  --star:rgba(255,255,255,.10); --panel:rgba(255,250,246,.64); --row:rgba(255,255,255,.55); --rowline:rgba(80,40,50,.09); --track:rgba(80,40,50,.12);
+  --ink:#2F2438; --muted:#6E5C76; --line:rgba(190,128,70,.55); --gold:#A9692A; --ongold:#fff; --mini:rgba(255,248,242,.94); --hl:rgba(185,120,47,.12);
+  --head:var(--ink); --headsub:#7A3E2A}
+:root[data-sky="twilight"]{
+  --bg:linear-gradient(180deg,#5D6497 0%,#8A6E9A 32%,#C27B86 62%,#E5916E 86%,#EFA06F 100%) fixed;
+  --sky:radial-gradient(1000px 360px at 22% 110%,rgba(255,186,120,.7),transparent 70%),var(--stars);
+  --star:rgba(255,240,230,.14); --panel:rgba(70,44,70,.36); --row:rgba(255,240,235,.10); --rowline:rgba(255,230,220,.14); --track:rgba(255,235,225,.18);
+  --ink:#FFF3EA; --muted:#F0D4CB; --line:rgba(255,200,140,.50); --gold:#FFC27E; --ongold:#4A2A44; --mini:rgba(80,52,82,.92); --hl:rgba(255,194,126,.14);
+  --head:var(--ink); --headsub:var(--gold)}
+:root[data-sky="sunset"]{
+  --bg:linear-gradient(180deg,#2B2140 0%,#5A2C43 42%,#A2463D 78%,#D9774A 100%) fixed;
+  --sky:radial-gradient(1000px 360px at 20% 108%,rgba(255,170,90,.65),transparent 70%),radial-gradient(600px 260px at 90% 0%,rgba(40,30,70,.6),transparent),var(--stars);
+  --star:rgba(255,230,210,.14); --panel:rgba(38,20,34,.42); --row:rgba(255,235,220,.05); --rowline:rgba(255,220,190,.10); --track:rgba(255,230,210,.14);
+  --ink:#F7E7DA; --muted:#D9BBAE; --line:rgba(244,186,112,.40); --gold:#F2B46A; --ongold:#3A1E2E; --mini:rgba(43,30,58,.92); --hl:rgba(242,180,106,.12);
+  --head:var(--ink); --headsub:var(--gold)}
+:root[data-sky="night"]{
+  --bg:#121829; --sky:radial-gradient(1200px 600px at 75% -10%,#1E2748,transparent),var(--stars);
+  --star:rgba(236,230,214,.18); --panel:rgba(255,255,255,.035); --row:rgba(255,255,255,.025); --rowline:rgba(255,255,255,.07); --track:rgba(255,255,255,.08);
+  --ink:#ECE6D6; --muted:#9EA1B4; --line:rgba(201,169,110,.34); --gold:#C9A96E; --ongold:#121829; --mini:rgba(18,24,41,.94); --hl:rgba(201,169,110,.10);
+  --head:var(--ink); --headsub:var(--gold)}

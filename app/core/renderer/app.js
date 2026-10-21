@@ -8,7 +8,7 @@ const BOSS_COST = [0, 0, 2, 4, 8, 12, 20];            // boss drops needed to re
 const TAL_COST = [0, 3, 6, 12, 18, 27, 36, 54, 108, 144]; // books (in 教え units) to go from L to L+1
 const SLOTS = ['花', '羽', '砂', '杯', '冠'];
 const TAL = ['通常', 'スキル', '爆発'];
-const DEF = { resin: 180, bossDrop: 2.6, bookDrop: 10, art: '', prio: 'team', fragile: 0, frPerDay: 1, frSince: '' };
+const DEF = { resin: 180, bossDrop: 2.6, bookDrop: 10, art: '', prio: 'team', fragile: 0, frPerDay: 1, frSince: '', sky: 'auto', dayStyle: 'gold' };
 const RESPAWN_DAYS = 2;
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
@@ -23,6 +23,25 @@ function weekKey(d) { return key(addD(d, -((d.getDay() + 6) % 7))); }
 function fmt(d) { return (d.getMonth() + 1) + '月' + d.getDate() + '日（' + WD[d.getDay()] + '）'; }
 function fmtTime(ts) { const d = new Date(ts); return (d.getMonth() + 1) + '/' + d.getDate() + '（' + WD[d.getDay()] + '）' + d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); }
 function left(ms) { const m = Math.max(1, Math.ceil(ms / 60000)), h = Math.floor(m / 60), mm = m % 60; return 'あと' + (h ? h + '時間' : '') + (mm || !h ? mm + '分' : ''); }
+
+// ---------------- sky of the day ----------------
+// dawn 5:00 / day 10:00 / akane 15:30 / twilight 17:00 / sunset 18:00 / night 19:30
+const SKY_TIMES = [[300, 'dawn'], [600, 'day'], [930, 'akane'], [1020, 'twilight'], [1080, 'sunset'], [1170, 'night']];
+const GREET = { dawn: 'おはよう、旅人', day: 'こんにちは、旅人', akane: 'もうすぐ夕方、旅人', twilight: 'おつかれさま、旅人', sunset: 'おつかれさま、旅人', night: '旅人、おかえりなさい' };
+function skySlot(d) {
+  const m = d.getHours() * 60 + d.getMinutes();
+  let slot = 'night';
+  SKY_TIMES.forEach(([t, k]) => { if (m >= t) slot = k; });
+  return slot;
+}
+function applySky() {
+  const slot = S.sky && S.sky !== 'auto' ? S.sky : skySlot(new Date());
+  const sky = slot === 'day' ? 'day-' + (S.dayStyle || 'gold') : slot;
+  const tone = ['twilight', 'sunset', 'night'].includes(slot) ? 'dark' : 'light';
+  document.documentElement.dataset.sky = sky;
+  document.documentElement.dataset.tone = tone;
+  return { slot, sky, tone };
+}
 
 // ---------------- SQLite ----------------
 let SQL = null, db = null, saveTimer = null, saveChain = Promise.resolve();
@@ -169,7 +188,7 @@ function simulate(start) {
     const anyNeed = CH.some((c) => N[c.id].boss > 0 || N[c.id].book > 0);
     if (frLeft > 0 && anyNeed) {
       const u = Math.min(frDay, frLeft); frLeft -= u; R += 60 * u;
-      items.push({ id: 'fr', kind: 'f', color: 'var(--warn)', runs: u, t: '脆弱樹脂を ' + u + ' 個使う', s: '樹脂＋' + (60 * u) + ' ・ 使ったあと残り ' + frLeft + ' 個', resin: 0 });
+      items.push({ id: 'fr', kind: 'f', color: 'var(--gold)', runs: u, t: '脆弱樹脂を ' + u + ' 個使う', s: '樹脂＋' + (60 * u) + ' ・ 使ったあと残り ' + frLeft + ' 個', resin: 0 });
     }
     const tRuns = {}, bRuns = {};
     // "team": finish priority-1 characters first (their books, then bosses), then the rest. "all": everyone shares each day.
@@ -252,8 +271,8 @@ let todayItems = [];
 function render() {
   const today = gameToday(), tk = key(today), wk = weekKey(today), now = Date.now();
   $('today').textContent = today.getFullYear() + '年' + fmt(today);
-  const hr = new Date().getHours();
-  $('hello').textContent = (hr >= 5 && hr < 11 ? 'おはよう' : hr >= 18 || hr < 5 ? 'こんばんは' : 'こんにちは') + '、旅人さん';
+  const skyNow = applySky();
+  $('hello').textContent = GREET[skyNow.slot];
   $('teamLine').textContent = CH.length ? 'いま育てている：' + CH.map((c) => c.name).join('、') : 'まだ誰も育てていません';
   const sim = simulate(today);
 
@@ -262,8 +281,8 @@ function render() {
   else {
     const ends = CH.map((c) => (sim.done[c.id] === undefined ? 399 : sim.done[c.id]));
     const maxEnd = Math.max.apply(null, ends);
-    if (maxEnd < 0) { $('daysLeft').innerHTML = '0<small>日</small>'; $('endDate').textContent = 'みんな目標まで育ちました。おつかれさま！'; }
-    else { $('daysLeft').innerHTML = 'あと' + (maxEnd + 1) + '<small>日</small>'; $('endDate').textContent = fmt(addD(today, maxEnd)) + 'ごろに完成予定'; }
+    if (maxEnd < 0) { $('daysLeft').innerHTML = '0<small>日</small>'; $('endDate').textContent = 'みんな目標まで育ちました。おつかれさま'; }
+    else { $('daysLeft').innerHTML = (maxEnd + 1) + '<small>日</small>'; $('endDate').textContent = fmt(addD(today, maxEnd)) + 'ごろ'; }
     $('charSum').innerHTML = CH.map((c, ix) => {
       const n = needs(c.id), t = totalNeed(c.id), tot = t.boss + t.book, rem = n.boss + n.book, pct = tot ? Math.round(100 * (1 - rem / tot)) : 100, e = ends[ix];
       return '<div class="cs" style="--c:' + c.c + '"><span class="nm"><span class="dot"></span>' + esc(c.name) + '</span><div class="bar"><i style="width:' + pct + '%"></i></div>' +
@@ -306,7 +325,7 @@ function render() {
   $('plan').innerHTML = sim.days.length ? sim.days.slice(0, 14).map((dd, i) => {
     const pills = (k) => dd.items.filter((it) => it.kind === k).map((it) => '<span class="pill" style="--c:' + it.color + '">' + esc(k === 'a' ? it.art.t + ' ×' + it.runs : (k === 't' ? it.ch.name + ' ' + it.ch.book : it.ch.name) + ' ×' + it.runs) + '</span>').join('') || '<span class="muted">–</span>';
     const fr = dd.items.find((it) => it.kind === 'f');
-    return '<tr class="' + (i === 0 ? 'today' : '') + '"><td class="day' + (dd.d.getDay() === 0 ? ' wd0' : '') + '">' + (i === 0 ? '今日 ' : '') + fmt(dd.d) + (fr ? '<br><span class="pill" style="--c:var(--warn)">脆弱樹脂 ×' + fr.runs + '</span>' : '') + '</td><td>' + pills('t') + '</td><td>' + pills('b') + '</td><td>' + pills('a') + '</td></tr>';
+    return '<tr class="' + (i === 0 ? 'today' : '') + '"><td class="day' + (dd.d.getDay() === 0 ? ' wd0' : '') + '">' + (i === 0 ? '今日 ' : '') + fmt(dd.d) + (fr ? '<br><span class="pill" style="--c:var(--gold)">脆弱樹脂 ×' + fr.runs + '</span>' : '') + '</td><td>' + pills('t') + '</td><td>' + pills('b') + '</td><td>' + pills('a') + '</td></tr>';
   }).join('') : '<tr><td colspan="4" class="muted">キャラを追加すると予定が出ます。</td></tr>';
 
   // history
@@ -329,7 +348,7 @@ function render() {
   // settings
   const setv = (id, v) => { if (document.activeElement !== $(id)) $(id).value = v; };
   setv('s-resin', S.resin); setv('s-boss', S.bossDrop); setv('s-book', S.bookDrop);
-  setv('s-fr', fragileLeft(today)); setv('s-frday', S.frPerDay || 1); setv('s-prio', S.prio || 'team');
+  setv('s-fr', fragileLeft(today)); setv('s-sky', S.sky || 'auto'); setv('s-dayStyle', S.dayStyle || 'gold'); setv('s-frday', S.frPerDay || 1); setv('s-prio', S.prio || 'team');
   const sets = artSets(), cur = leftoverSet();
   if (document.activeElement !== $('s-art')) {
     $('s-art').innerHTML = Object.keys(sets).length ? Object.keys(sets).map((k) => '<option value="' + esc(k) + '">' + esc(k + '（' + sets[k].who.join('・') + '）') + '</option>').join('') : '<option value="">キャラを追加してください</option>';
@@ -345,7 +364,8 @@ function pushOverlay(rItems, mItems, wItems, waiting, ck, wck, now) {
   const items = pack('樹脂でまわる', 'd', rItems, ck).concat(pack('マップ', 'd', mItems, ck), pack('今週の週ボス', 'w', wItems, wck));
   const ts = waiting.slice().sort((a, b) => a.r - b.r);
   window.api.ovPush({
-    days: $('daysLeft').textContent.replace(/\s+/g, ''),
+    days: (/^\d/.test($('daysLeft').textContent) ? 'あと' : '') + $('daysLeft').textContent.replace(/\s+/g, ''),
+    sky: document.documentElement.dataset.sky, tone: document.documentElement.dataset.tone,
     done: items.filter((x) => x.on).length, total: items.length, items,
     emptyText: CH.length ? 'きょうのやることはありません。' : 'メイン画面で育てるキャラを追加してください。',
     timers: ts.length ? '復活待ち：' + ts.map((w) => w.it.t.replace(/を拾う.*$/, '') + ' ' + left(w.r - now)).join('、') : '',
@@ -457,6 +477,8 @@ document.addEventListener('change', (e) => {
   }
   if (el.id === 's-art') { setSetting('art', el.value); render(); return; }
   if (el.id === 's-prio') { setSetting('prio', el.value); render(); return; }
+  if (el.id === 's-sky') { setSetting('sky', el.value); render(); return; }
+  if (el.id === 's-dayStyle') { setSetting('dayStyle', el.value); render(); return; }
 });
 document.addEventListener('input', (e) => {
   const el = e.target; if (!el.id || !el.id.startsWith('s-') || el.tagName !== 'INPUT') return;
@@ -562,6 +584,7 @@ async function doImport() {
 
 // ---------------- start ----------------
 (async function start() {
+  applySky(); // paint the right sky before the data loads
   try {
     SQL = await window.initSqlJs({ wasmBinary: await window.api.wasm() });
     const bytes = await window.api.load();

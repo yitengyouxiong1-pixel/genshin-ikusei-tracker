@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'">
 <title>原神 育成トラッカー</title>
+<link rel="stylesheet" href="sky.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,7 +13,7 @@
   <header class="top">
     <div>
       <div class="hello" id="hello">こんにちは、旅人さん</div>
-      <h1><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 1c.6 5.4 2.4 8.4 11 11-8.6 2.6-10.4 5.6-11 11-.6-5.4-2.4-8.4-11-11 8.6-2.6 10.4-5.6 11-11z"/></svg>原神 育成トラッカー</h1>
+      <h1><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>原神 育成トラッカー</h1>
       <div class="team" id="teamLine"></div>
     </div>
     <div class="topr">
@@ -24,7 +25,8 @@
 
   <section class="summary" aria-label="残り日数">
     <div class="big">
-      <span class="lead">みんな育ちきるまで</span>
+      <svg class="astro" viewBox="0 0 200 200" aria-hidden="true"><g fill="none" stroke="currentColor"><circle cx="100" cy="100" r="92" stroke-opacity=".38"/><circle cx="100" cy="100" r="70" stroke-dasharray="2 5" stroke-opacity=".38"/><circle cx="100" cy="100" r="46" stroke-opacity=".38"/><path d="M100 8v184M8 100h184M35 35l130 130M165 35L35 165" stroke-opacity=".2"/></g><g fill="currentColor"><circle cx="100" cy="8" r="3"/><circle cx="165" cy="35" r="2"/><circle cx="54" cy="146" r="2.4"/><circle cx="146" cy="100" r="2"/></g></svg>
+      <span class="lead">育成完了まで</span>
       <span class="n" id="daysLeft">–</span>
       <span class="when" id="endDate"></span>
     </div>
@@ -87,6 +89,8 @@
         <label for="s-fr">脆弱樹脂の手持ち（今日使う前の数）</label><input id="s-fr" type="number" min="0" max="999" step="1">
         <label for="s-frday">脆弱樹脂を1日に使う数</label><input id="s-frday" type="number" min="1" max="10" step="1">
         <label for="s-art">余った樹脂で回る聖遺物</label><select id="s-art"></select>
+        <label for="s-sky">画面の空</label><select id="s-sky"><option value="auto">時間で自動（おすすめ）</option><option value="dawn">朝（夜明け）</option><option value="day">昼</option><option value="akane">夕方前（茜さす空）</option><option value="twilight">黄昏</option><option value="sunset">夕焼け</option><option value="night">夜（星図）</option></select>
+        <label for="s-dayStyle">昼の空の種類</label><select id="s-dayStyle"><option value="gold">午後の金色</option><option value="sky">蒼天</option><option value="field">風の草原</option></select>
         <label for="s-prio">育成の順番</label><select id="s-prio"><option value="team">「先に育てる」キャラから</option><option value="all">全員同時に</option></select>
       </div>
       <p class="small"><b>ゲーム中の表示：</b>Ctrl+Alt+G で「リスト → ちび → 隠す」の順に切りかわります。Ctrl+Alt+M でクリックすり抜け（上をクリックしてもゲーム側が動く）になります。原神の「表示モード」を<b>ボーダーレス</b>にすると、ゲームの上に表示されます。<span class="err" id="ovNote"></span></p>

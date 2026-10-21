@@ -4,20 +4,21 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
 <title>ゲーム中の表示</title>
+<link rel="stylesheet" href="sky.css">
 <link rel="stylesheet" href="overlay.css">
 </head>
 <body>
 <div id="root" class="is-list">
   <!-- mini: one line, click to open the list -->
   <button type="button" class="mini" id="mini" title="クリックでリスト表示">
-    <span class="st" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 1c.6 5.4 2.4 8.4 11 11-8.6 2.6-10.4 5.6-11 11-.6-5.4-2.4-8.4-11-11 8.6-2.6 10.4-5.6 11-11z"/></svg></span>
+    <span class="st" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg></span>
     <b id="mDays">–</b><span id="mDone"></span><span class="mt" id="mTimer"></span>
   </button>
 
   <!-- list -->
   <section class="card" id="card">
     <header class="hd">
-      <span class="ttl"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 1c.6 5.4 2.4 8.4 11 11-8.6 2.6-10.4 5.6-11 11-.6-5.4-2.4-8.4-11-11 8.6-2.6 10.4-5.6 11-11z"/></svg>きょうのやること</span>
+      <span class="ttl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg>きょうのやること</span>
       <span class="days" id="days">–</span>
       <span class="tools">
         <button type="button" data-cmd="opacity-" title="うすくする" aria-label="うすくする">−</button>
