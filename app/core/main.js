@@ -197,11 +197,13 @@ ipcMain.handle('app:info', () => ({ version: global.__GT.coreVersion, launcher: 
 let updateTimer = null;
 async function runUpdateCheck() {
   const st = await updater.check();
+  console.log('[update]', JSON.stringify(st));
   if (win && !win.isDestroyed()) win.webContents.send('update:status', st);
   return st;
 }
 ipcMain.on('app:started', (e) => {
   if (!win || e.sender !== win.webContents) return;
+  console.log('[app] started core', global.__GT.coreVersion);
   updater.markGood();
   if (!updateTimer) { setTimeout(runUpdateCheck, 15000); updateTimer = setInterval(runUpdateCheck, 6 * 3600e3); }
 });

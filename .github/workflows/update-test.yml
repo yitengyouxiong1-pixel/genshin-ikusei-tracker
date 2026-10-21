@@ -31,6 +31,7 @@ jobs:
           if [ -f "$DIR/version.json" ]; then echo "::notice::OK downloaded $WANT: $(cat "$DIR/version.json" | tr -d '\n') files=$(ls "$DIR" | tr '\n' ' ')";
           else
             echo "::error::NG no update. dirs=$(ls -A "$HOME/.config/GenshinIkuseiTracker" 2>&1 | tr '\n' ' ')"
-            echo "::error::log=$(tail -c 1500 /tmp/app.log | tr '\n' '|')"
+            echo "::error::app lines=$(grep -E '^\[(app|update)\]' /tmp/app.log | tr '\n' '|')"
+            echo "::error::log=$(grep -v bus.cc /tmp/app.log | tail -c 1500 | tr '\n' '|')"
             exit 1
           fi

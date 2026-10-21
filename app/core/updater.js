@@ -56,7 +56,7 @@ async function check() {
     const current = G.coreVersion;
     let m;
     try { m = JSON.parse((await get(LATEST_JSON, 64 * 1024)).toString('utf8')); }
-    catch (e) { return { status: e.message === 'not-found' ? 'latest' : 'offline', current }; }
+    catch (e) { return { status: e.message === 'not-found' ? 'latest' : 'offline', current, message: String(e && e.message || e) }; }
     if (!m || !isVer(m.version) || typeof m.bundle !== 'string' || !/^[A-Za-z0-9_.\-]+$/.test(m.bundle) || !/^[0-9a-f]{64}$/.test(m.sha256 || '') || !(m.size > 0 && m.size <= MAX_BUNDLE)) {
       return { status: 'error', current, message: '更新情報の形式が正しくありません' };
     }
