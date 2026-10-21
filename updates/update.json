@@ -1,9 +1,9 @@
 {
-  "version": "1.3.0",
-  "bundle": "core-1.3.0.bundle.gz",
-  "sha256": "7ebed12b0830f0defe47e7c645dbd37f3e416fee1ac5b3f50c1d40bc9c37ebd2",
-  "size": 478909,
+  "version": "1.3.1",
+  "bundle": "core-1.3.1.bundle.gz",
+  "sha256": "e7c035b65e9b83c5e8b3cf0d6dd36fcc01f28459126984cc9785136995dc91e3",
+  "size": 479043,
   "minLauncher": "1.3.0",
-  "notes": "自動アップデートに対応しました。ゲーム中の小さな表示（Ctrl+Alt+G）と、やわらかいデザインになりました。",
+  "notes": "自動アップデートの確認がうまく動かない問題を直しました。",
   "published": "2026-10-21"
 }
