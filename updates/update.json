@@ -1,0 +1,9 @@
+{
+  "version": "1.3.0",
+  "bundle": "core-1.3.0.bundle.gz",
+  "sha256": "7ebed12b0830f0defe47e7c645dbd37f3e416fee1ac5b3f50c1d40bc9c37ebd2",
+  "size": 478909,
+  "minLauncher": "1.3.0",
+  "notes": "自動アップデートに対応しました。ゲーム中の小さな表示（Ctrl+Alt+G）と、やわらかいデザインになりました。",
+  "published": "2026-10-21"
+}

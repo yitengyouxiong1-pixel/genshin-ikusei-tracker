@@ -1,4 +1,4 @@
-// Updater: fetches update.json from the latest GitHub Release, downloads the matching core bundle,
+// Updater: fetches updates/update.json from the GitHub repository, downloads the matching core bundle,
 // checks its size and SHA-256, unpacks it into app-versions/<version>, and tells the window it is ready.
 // The switch happens on the next start (the launcher picks the newest good version).
 const { app, net } = require('electron');
@@ -9,10 +9,11 @@ const crypto = require('crypto');
 
 const OWNER = 'yitengyouxiong1-pixel';
 const REPO = 'genshin-ikusei-tracker';
-const RELEASES_PAGE = `https://github.com/${OWNER}/${REPO}/releases/latest`;
-const LATEST_JSON = `https://github.com/${OWNER}/${REPO}/releases/latest/download/update.json`;
-// Only GitHub and its download hosts are ever contacted.
-const ALLOWED = /^https:\/\/(github\.com|objects\.githubusercontent\.com|release-assets\.githubusercontent\.com)\//;
+const RELEASES_PAGE = `https://github.com/${OWNER}/${REPO}#readme`;
+const RAW = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main/updates/`;
+const LATEST_JSON = RAW + 'update.json';
+// Only this repository's files on GitHub are ever contacted.
+const ALLOWED = new RegExp('^https://raw\\.githubusercontent\\.com/' + OWNER + '/' + REPO + '/');
 const MAX_BUNDLE = 30 * 1024 * 1024;
 
 const cmp = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++) { if (x[i] !== y[i]) return x[i] - y[i]; } return 0; };
@@ -66,7 +67,7 @@ async function check() {
     if (fs.existsSync(path.join(dest, '.bad'))) return { status: 'latest', current };
     try {
       if (!fs.existsSync(path.join(dest, 'version.json'))) {
-        const gz = await get(`https://github.com/${OWNER}/${REPO}/releases/download/v${m.version}/${m.bundle}`, MAX_BUNDLE);
+        const gz = await get(RAW + m.bundle, MAX_BUNDLE);
         if (gz.length !== m.size) throw new Error('size-mismatch');
         if (crypto.createHash('sha256').update(gz).digest('hex') !== m.sha256) throw new Error('hash-mismatch');
         fs.mkdirSync(G.versionsDir, { recursive: true });

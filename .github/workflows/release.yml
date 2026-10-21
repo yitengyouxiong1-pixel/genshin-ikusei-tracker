@@ -1,0 +1,36 @@
+# When updates/update.json gets a new version, build the full Windows zip and publish it as a GitHub Release
+# (the download page for new users). Installed apps update from updates/ directly and do not need this.
+name: 配布用zipを作る
+on:
+  push:
+    branches: [main]
+    paths: ['updates/update.json']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          V=$(jq -r .version updates/update.json)
+          NOTES=$(jq -r .notes updates/update.json)
+          if gh release view "v$V" >/dev/null 2>&1; then echo "v$V is already published"; exit 0; fi
+          EV=31.7.7
+          curl -sSLf -o /tmp/electron-win.zip "https://github.com/electron/electron/releases/download/v$EV/electron-v$EV-win32-x64.zip"
+          curl -sSLf -o /tmp/SHASUMS256.txt "https://github.com/electron/electron/releases/download/v$EV/SHASUMS256.txt"
+          EXPECT=$(grep "electron-v$EV-win32-x64.zip" /tmp/SHASUMS256.txt | cut -c1-64)
+          echo "$EXPECT  /tmp/electron-win.zip" | sha256sum -c -
+          ELECTRON_WIN_ZIP=/tmp/electron-win.zip python3 tools/build.py "$NOTES"
+          cat > /tmp/notes.md <<NOTES
+          **はじめての方**：下の「GenshinTracker-Windows-$V.zip」をダウンロードして展開し、中の GenshinTracker.exe を開いてください。
+          インストール済みの方は、アプリが自動で更新するので何もしなくて大丈夫です。
+
+          $NOTES
+          NOTES
+          gh release create "v$V" "dist/release-$V/GenshinTracker-Windows-$V.zip" --title "$V" --notes-file /tmp/notes.md --latest

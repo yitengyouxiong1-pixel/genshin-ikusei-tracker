@@ -41,6 +41,15 @@ upd = {'version': version, 'bundle': bname, 'sha256': hashlib.sha256(bundle).hex
        'minLauncher': MIN_LAUNCHER, 'notes': notes, 'published': datetime.date.today().isoformat()}
 json.dump(upd, open(os.path.join(out, 'update.json'), 'w'), ensure_ascii=False, indent=2)
 
+# 2b) copy into updates/ (committed to the repo; installed apps read it from raw.githubusercontent.com).
+#     Keep this bundle and the one before it; older ones stay in git history.
+UPD = os.path.join(ROOT, 'updates'); os.makedirs(UPD, exist_ok=True)
+shutil.copy(os.path.join(out, bname), os.path.join(UPD, bname))
+olds = sorted((f for f in os.listdir(UPD) if f.startswith('core-') and f != bname),
+              key=lambda f: [int(x) for x in f[5:-10].split('.')])
+for f in olds[:-1]: os.remove(os.path.join(UPD, f))
+shutil.copy(os.path.join(out, 'update.json'), os.path.join(UPD, 'update.json'))
+
 # 3) full Windows zip: Electron runtime + this app
 zname = 'GenshinTracker-Windows-%s.zip' % version
 with zipfile.ZipFile(RUNTIME_ZIP) as src, zipfile.ZipFile(os.path.join(out, zname), 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
