@@ -1,0 +1,8 @@
+{
+  "name": "genshin-ikusei-tracker",
+  "productName": "原神 育成トラッカー",
+  "version": "1.3.0",
+  "description": "原神のキャラ育成を毎日チェックして、完成までの日数を計算するアプリ",
+  "main": "main.js",
+  "license": "MIT"
+}
