@@ -17,12 +17,15 @@ const backupDir = () => path.join(dataDir(), 'backups');
 const SQLITE_HEADER = Buffer.from('SQLite format 3\0', 'binary');
 
 if (!app.requestSingleInstanceLock()) { app.quit(); }
+const APP_ICON = path.join(__dirname, 'renderer', 'icon.png');
+if (process.platform === 'win32') app.setAppUserModelId('local.genshin.ikusei.tracker'); // taskbar uses our icon and groups our windows
 
 let win = null;
 function createWindow() {
   win = new BrowserWindow({
     width: 1220, height: 880, minWidth: 380, minHeight: 500,
     title: '原神 育成トラッカー',
+    icon: APP_ICON,
     autoHideMenuBar: true,
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#1F2244' : '#EEF6F3',
     webPreferences: {
@@ -66,6 +69,7 @@ function createOverlay() {
     x: OV.x, y: OV.y, width: 340, height: 160, frame: false, transparent: true, resizable: false, movable: true,
     skipTaskbar: true, alwaysOnTop: true, show: false, hasShadow: false, fullscreenable: false, maximizable: false, minimizable: false,
     title: '原神 育成トラッカー（ゲーム中の表示）',
+    icon: APP_ICON,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: true, nodeIntegration: false, spellcheck: false, backgroundThrottling: false }
   });
   overlay.setAlwaysOnTop(true, 'screen-saver');

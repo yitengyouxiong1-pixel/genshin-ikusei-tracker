@@ -8,7 +8,7 @@ Outputs into dist/release-<version>/:
   update.json                     what installed apps read to find the update
   GenshinTracker-Windows-<version>.zip   full download for new users
 """
-import base64, gzip, hashlib, io, json, os, shutil, sys, zipfile, datetime
+import base64, gzip, hashlib, io, json, os, shutil, subprocess, sys, tempfile, zipfile, datetime
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP = os.path.join(ROOT, 'app')
 CORE = os.path.join(APP, 'core')
@@ -51,14 +51,35 @@ for f in olds[:-1]: os.remove(os.path.join(UPD, f))
 shutil.copy(os.path.join(out, 'update.json'), os.path.join(UPD, 'update.json'))
 
 # 3) full Windows zip: Electron runtime + this app
+def brand_exe(data):
+    """Put our icon and names into the exe. Needs rcedit (Windows), given as RCEDIT=path; skipped otherwise."""
+    rcedit = os.environ.get('RCEDIT')
+    if not rcedit:
+        print('  (RCEDIT not set: exe keeps the Electron icon)')
+        return data
+    d = tempfile.mkdtemp(); exe = os.path.join(d, 'GenshinTracker.exe')
+    open(exe, 'wb').write(data)
+    subprocess.run([rcedit, exe, '--set-icon', os.path.join(ROOT, 'packaging', 'icon.ico'),
+                    '--set-version-string', 'ProductName', '原神 育成トラッカー',
+                    '--set-version-string', 'FileDescription', '原神 育成トラッカー',
+                    '--set-version-string', 'CompanyName', 'genshin-ikusei-tracker',
+                    '--set-version-string', 'OriginalFilename', 'GenshinTracker.exe',
+                    '--set-file-version', version, '--set-product-version', version], check=True)
+    out = open(exe, 'rb').read(); shutil.rmtree(d, ignore_errors=True)
+    print('  exe branded with icon')
+    return out
+
 zname = 'GenshinTracker-Windows-%s.zip' % version
 with zipfile.ZipFile(RUNTIME_ZIP) as src, zipfile.ZipFile(os.path.join(out, zname), 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
     for info in src.infolist():
         if info.is_dir(): continue
         name = info.filename
         if name == 'resources/default_app.asar': continue
-        if name == 'electron.exe': name = 'GenshinTracker.exe'
-        z.writestr('GenshinTracker/' + name, src.read(info.filename))
+        data = src.read(info.filename)
+        if name == 'electron.exe':
+            name = 'GenshinTracker.exe'
+            data = brand_exe(data)
+        z.writestr('GenshinTracker/' + name, data)
     for root, ds, fs in os.walk(APP):
         ds[:] = [d for d in ds if not d.startswith('.')]
         for f in fs:

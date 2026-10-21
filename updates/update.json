@@ -1,9 +1,9 @@
 {
-  "version": "1.4.0",
-  "bundle": "core-1.4.0.bundle.gz",
-  "sha256": "04ca067028e406b95fb5664db84d4e6273dee00a3c72f61305fbd2fe4dbe23a2",
-  "size": 481974,
+  "version": "1.4.1",
+  "bundle": "core-1.4.1.bundle.gz",
+  "sha256": "4388ae16d7dd72eeb91f89ce78d5398b3f46c1d5f938d145aebc6e19c772dfdb",
+  "size": 513741,
   "minLauncher": "1.3.0",
-  "notes": "新しいデザイン「星図」になりました。朝・昼・夕方前・黄昏・夕焼け・夜の6つの空が、時間で自動で切りかわります。",
+  "notes": "アプリのアイコンが新しくなりました（結晶の星）。",
   "published": "2026-10-21"
 }
