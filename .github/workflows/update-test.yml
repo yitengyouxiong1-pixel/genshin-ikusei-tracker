@@ -1,0 +1,30 @@
+# Manual check that installed apps can really update: starts the app with an older core (1.0.0)
+# on Linux and waits until it has downloaded the version in updates/update.json from GitHub.
+name: 自動アップデートのテスト
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start an old app and wait for the update
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb >/dev/null
+          EV=31.7.7
+          curl -sSLf -o /tmp/e.zip "https://github.com/electron/electron/releases/download/v$EV/electron-v$EV-linux-x64.zip"
+          curl -sSLf -o /tmp/SHASUMS256.txt "https://github.com/electron/electron/releases/download/v$EV/SHASUMS256.txt"
+          echo "$(grep "electron-v$EV-linux-x64.zip" /tmp/SHASUMS256.txt | cut -c1-64)  /tmp/e.zip" | sha256sum -c -
+          mkdir /tmp/e && unzip -q /tmp/e.zip -d /tmp/e && rm -f /tmp/e/resources/default_app.asar
+          cp -r app /tmp/e/resources/app
+          echo '{ "version": "1.0.0" }' > /tmp/e/resources/app/core/version.json
+          WANT=$(jq -r .version updates/update.json)
+          DIR="$HOME/.config/GenshinIkuseiTracker/app-versions/$WANT"
+          xvfb-run -a /tmp/e/electron --no-sandbox > /tmp/app.log 2>&1 &
+          for i in $(seq 1 30); do sleep 3; if [ -f "$DIR/version.json" ]; then break; fi; done
+          pkill -f /tmp/e/electron || true
+          if [ -f "$DIR/version.json" ]; then echo "OK: downloaded $WANT"; cat "$DIR/version.json"; ls "$DIR";
+          else echo "NG: no update downloaded"; cat /tmp/app.log; ls -la "$HOME/.config/GenshinIkuseiTracker" || true; exit 1; fi
