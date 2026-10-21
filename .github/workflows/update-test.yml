@@ -12,8 +12,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Start an old app and wait for the update
         run: |
-          set -euo pipefail
-          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb >/dev/null
+          set -uo pipefail
+          trap 'echo "::error::failed at line $LINENO"' ERR
+          sudo apt-get update -qq >/dev/null && sudo apt-get install -y -qq xvfb >/dev/null || echo "::warning::xvfb install failed"
+          which xvfb-run || echo "::error::xvfb-run missing"
           EV=31.7.7
           curl -sSLf -o /tmp/e.zip "https://github.com/electron/electron/releases/download/v$EV/electron-v$EV-linux-x64.zip"
           curl -sSLf -o /tmp/SHASUMS256.txt "https://github.com/electron/electron/releases/download/v$EV/SHASUMS256.txt"
@@ -26,5 +28,9 @@ jobs:
           xvfb-run -a /tmp/e/electron --no-sandbox > /tmp/app.log 2>&1 &
           for i in $(seq 1 30); do sleep 3; if [ -f "$DIR/version.json" ]; then break; fi; done
           pkill -f /tmp/e/electron || true
-          if [ -f "$DIR/version.json" ]; then echo "OK: downloaded $WANT"; cat "$DIR/version.json"; ls "$DIR";
-          else echo "NG: no update downloaded"; cat /tmp/app.log; ls -la "$HOME/.config/GenshinIkuseiTracker" || true; exit 1; fi
+          if [ -f "$DIR/version.json" ]; then echo "::notice::OK downloaded $WANT: $(cat "$DIR/version.json" | tr -d '\n') files=$(ls "$DIR" | tr '\n' ' ')";
+          else
+            echo "::error::NG no update. dirs=$(ls -A "$HOME/.config/GenshinIkuseiTracker" 2>&1 | tr '\n' ' ')"
+            echo "::error::log=$(tail -c 1500 /tmp/app.log | tr '\n' '|')"
+            exit 1
+          fi
