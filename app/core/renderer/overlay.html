@@ -8,31 +8,26 @@
 <link rel="stylesheet" href="overlay.css">
 </head>
 <body>
-<div id="root" class="is-list">
-  <!-- mini: one line, click to open the list -->
-  <button type="button" class="mini" id="mini" title="クリックでリスト表示">
-    <span class="st" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg></span>
-    <b id="mDays">–</b><span id="mDone"></span><span class="mt" id="mTimer"></span>
-  </button>
-
-  <!-- list -->
-  <section class="card" id="card">
-    <header class="hd">
-      <span class="ttl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg>きょうのやること</span>
-      <span class="days" id="days">–</span>
-      <span class="tools">
-        <button type="button" data-cmd="opacity-" title="うすくする" aria-label="うすくする">−</button>
-        <button type="button" data-cmd="opacity+" title="こくする" aria-label="こくする">＋</button>
-        <button type="button" data-cmd="mode:mini" title="ちび表示にする" aria-label="ちび表示にする">▁</button>
-        <button type="button" data-cmd="open-main" title="メイン画面を開く" aria-label="メイン画面を開く">⤢</button>
-        <button type="button" data-cmd="hide" title="隠す（Ctrl+Alt+G）" aria-label="隠す">×</button>
-      </span>
-    </header>
-    <div class="prog"><span class="bar"><i id="bar"></i></span><span id="count">0 / 0</span></div>
-    <div class="list" id="list"></div>
-    <p class="timers" id="timers" hidden></p>
-    <footer class="ft"><span id="hint">Ctrl+Alt+M でクリックすり抜け</span><span id="op"></span></footer>
-  </section>
+<!-- One layout for every size: the window's size decides how much of it shows (see overlay.css). -->
+<div id="root">
+  <header class="hd" title="ここをドラッグで移動・縁をドラッグで大きさを変更">
+    <span class="st"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg></span>
+    <span class="ttl">きょうのやること</span>
+    <span class="days" id="days">–</span>
+    <span class="cnt" id="cnt"></span>
+    <span class="nt" id="nt"></span>
+    <span class="tools">
+      <button type="button" class="op" data-cmd="opacity-" title="うすくする" aria-label="うすくする">−</button>
+      <button type="button" class="op" data-cmd="opacity+" title="こくする" aria-label="こくする">＋</button>
+      <button type="button" id="modeBtn" data-cmd="mode:mini" title="ちび表示にする" aria-label="ちび表示にする">▁</button>
+      <button type="button" class="main" data-cmd="open-main" title="メイン画面を開く" aria-label="メイン画面を開く">⤢</button>
+      <button type="button" data-cmd="hide" title="隠す（Ctrl+Alt+G）" aria-label="隠す">×</button>
+    </span>
+  </header>
+  <div class="prog"><span class="bar"><i id="bar"></i></span><span id="count">0 / 0</span></div>
+  <div class="list" id="list"></div>
+  <p class="timers" id="timers" hidden></p>
+  <footer class="ft"><span id="hint">縁をドラッグで大きさを変えられます</span><span id="op"></span></footer>
   <div class="through" id="through" hidden>すり抜け中（Ctrl+Alt+M で戻す）</div>
 </div>
 <script src="overlay.js"></script>

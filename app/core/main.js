@@ -51,10 +51,17 @@ app.on('will-quit', () => globalShortcut.unregisterAll());
 
 // ---------------- overlay: a small always-on-top window over the game ----------------
 // It never touches the game; it is an ordinary window kept above others. Works when the game runs in borderless mode.
+// The window is resizable from its edges like any window; the page adapts what it shows to the size it is given.
+// Sizes below MINI_H tall count as the one-line "mini" view; each view remembers its own last size.
 let overlay = null, lastState = null, hotkeyOk = { toggle: true, through: true };
-const OV = { visible: false, mode: 'list', x: null, y: null, opacity: 0.94, through: false };
+const MINI_H = 90;
+const OV = { visible: false, mode: 'list', x: null, y: null, opacity: 0.94, through: false, list: { w: 340, h: 480 }, mini: { w: 300, h: 46 } };
+const SKY_BG = { night: '#121829', dawn: '#EEEFF6', 'day-gold': '#F6F2E7', 'day-sky': '#EEF3F9', 'day-field': '#EEF4F0', akane: '#F6ECE8', twilight: '#4D3450', sunset: '#2B1E33' };
 const ovPath = () => path.join(dataDir(), 'overlay.json');
-function loadOv() { try { Object.assign(OV, JSON.parse(fs.readFileSync(ovPath(), 'utf8'))); } catch (_) { /* first run */ } OV.through = false; }
+function loadOv() {
+  try { const d = JSON.parse(fs.readFileSync(ovPath(), 'utf8')); Object.assign(OV, d, { list: Object.assign({}, OV.list, d.list), mini: Object.assign({}, OV.mini, d.mini) }); } catch (_) { /* first run */ }
+  OV.through = false;
+}
 function saveOv() { try { fs.mkdirSync(dataDir(), { recursive: true }); fs.writeFileSync(ovPath(), JSON.stringify(OV)); } catch (_) { /* not critical */ } }
 function onScreen(x, y) { return screen.getAllDisplays().some((d) => { const a = d.workArea; return x >= a.x - 40 && y >= a.y - 10 && x < a.x + a.width - 60 && y < a.y + a.height - 40; }); }
 function ovConfig() { return { mode: OV.mode, opacity: OV.opacity, through: OV.through, hotkeyOk }; }
@@ -64,10 +71,12 @@ function sendCfg() {
 }
 function createOverlay() {
   const wa = screen.getPrimaryDisplay().workArea;
-  if (OV.x == null || !onScreen(OV.x, OV.y)) { OV.x = wa.x + wa.width - 360; OV.y = wa.y + 90; }
+  const sz = OV[OV.mode] || OV.list;
+  if (OV.x == null || !onScreen(OV.x, OV.y)) { OV.x = wa.x + wa.width - sz.w - 24; OV.y = wa.y + 90; }
   overlay = new BrowserWindow({
-    x: OV.x, y: OV.y, width: 340, height: 160, frame: false, transparent: true, resizable: false, movable: true,
-    skipTaskbar: true, alwaysOnTop: true, show: false, hasShadow: false, fullscreenable: false, maximizable: false, minimizable: false,
+    x: OV.x, y: OV.y, width: sz.w, height: sz.h, minWidth: 140, minHeight: 34, maxWidth: 1000, maxHeight: 1200,
+    frame: false, resizable: true, thickFrame: true, movable: true, backgroundColor: SKY_BG[(lastState && lastState.sky) || 'night'] || '#121829',
+    skipTaskbar: true, alwaysOnTop: true, show: false, fullscreenable: false, maximizable: false, minimizable: false,
     title: '原神 育成トラッカー（ゲーム中の表示）',
     icon: APP_ICON,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: true, nodeIntegration: false, spellcheck: false, backgroundThrottling: false }
@@ -78,7 +87,21 @@ function createOverlay() {
   overlay.loadFile(path.join(__dirname, 'renderer', 'overlay.html'));
   overlay.webContents.on('will-navigate', (e) => e.preventDefault());
   overlay.webContents.on('did-finish-load', () => { sendCfg(); if (lastState) overlay.webContents.send('ov:state', lastState); });
-  overlay.on('moved', () => { const b = overlay.getBounds(); OV.x = b.x; OV.y = b.y; saveOv(); });
+  let t = null;
+  const remember = () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      if (!overlay || overlay.isDestroyed()) return;
+      const b = overlay.getBounds();
+      OV.x = b.x; OV.y = b.y;
+      const mode = b.height < MINI_H ? 'mini' : 'list';
+      OV[mode] = { w: b.width, h: b.height };
+      if (mode !== OV.mode) { OV.mode = mode; sendCfg(); }
+      saveOv();
+    }, 250);
+  };
+  overlay.on('moved', remember);
+  overlay.on('resize', remember);
   overlay.on('closed', () => { overlay = null; });
 }
 function showOverlay() {
@@ -87,7 +110,15 @@ function showOverlay() {
   if (overlay.webContents.isLoading()) overlay.webContents.once('did-finish-load', go); else go();
 }
 function hideOverlay() { if (overlay) overlay.hide(); OV.visible = false; setThrough(false); saveOv(); sendCfg(); }
-function setMode(m) { OV.mode = m; saveOv(); sendCfg(); }
+// switch view: resize the window to the size last used for that view
+function setMode(m) {
+  OV.mode = m;
+  if (overlay && !overlay.isDestroyed()) {
+    const b = overlay.getBounds(), sz = OV[m];
+    overlay.setBounds({ x: b.x, y: b.y, width: sz.w, height: sz.h });
+  }
+  saveOv(); sendCfg();
+}
 function setThrough(v) {
   OV.through = !!v;
   if (overlay && !overlay.isDestroyed()) overlay.setIgnoreMouseEvents(OV.through, { forward: true });
@@ -95,7 +126,7 @@ function setThrough(v) {
 }
 // Ctrl+Alt+G: hidden → list → mini → hidden
 function cycleOverlay() {
-  if (!OV.visible || !overlay || !overlay.isVisible()) { OV.mode = 'list'; showOverlay(); return; }
+  if (!OV.visible || !overlay || !overlay.isVisible()) { showOverlay(); setMode('list'); return; }
   if (OV.mode === 'list') { setMode('mini'); return; }
   hideOverlay();
 }
@@ -107,22 +138,18 @@ const fromMain = (e) => win && e.sender === win.webContents;
 const fromOverlay = (e) => overlay && e.sender === overlay.webContents;
 ipcMain.on('ov:push', (e, state) => {
   if (!fromMain(e)) return;
+  const skyChanged = !lastState || lastState.sky !== state.sky;
   lastState = state;
-  if (overlay && !overlay.isDestroyed()) overlay.webContents.send('ov:state', state);
+  if (overlay && !overlay.isDestroyed()) {
+    if (skyChanged && SKY_BG[state.sky]) overlay.setBackgroundColor(SKY_BG[state.sky]);
+    overlay.webContents.send('ov:state', state);
+  }
 });
 ipcMain.on('ov:action', (e, a) => {
   if (!fromOverlay(e) || !a || typeof a.id !== 'string' || !['d', 'w'].includes(a.scope)) return;
   if (win && !win.isDestroyed()) win.webContents.send('ov:action', { scope: a.scope, id: a.id, on: !!a.on });
 });
-ipcMain.on('ov:size', (e, sz) => {
-  if (!fromOverlay(e) || !sz) return;
-  const w = Math.max(120, Math.min(420, Math.ceil(+sz.w || 0))), h = Math.max(40, Math.min(760, Math.ceil(+sz.h || 0)));
-  const b = overlay.getBounds();
-  if (b.width !== w || b.height !== h) {
-    // some systems ignore size changes on a fixed-size window, so allow it just for this change
-    overlay.setResizable(true); overlay.setBounds({ x: b.x, y: b.y, width: w, height: h }); overlay.setResizable(false);
-  }
-});
+ipcMain.on('ov:size', () => { /* older overlay pages asked to be fitted; the size is now the viewer's choice */ });
 ipcMain.on('ov:cmd', (e, cmd) => {
   if (!fromMain(e) && !fromOverlay(e)) return;
   if (cmd === 'show') { showOverlay(); return; }

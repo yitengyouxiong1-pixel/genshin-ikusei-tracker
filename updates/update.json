@@ -1,9 +1,9 @@
 {
-  "version": "1.4.1",
-  "bundle": "core-1.4.1.bundle.gz",
-  "sha256": "4388ae16d7dd72eeb91f89ce78d5398b3f46c1d5f938d145aebc6e19c772dfdb",
-  "size": 513741,
+  "version": "1.5.0",
+  "bundle": "core-1.5.0.bundle.gz",
+  "sha256": "3c1ee15022a07a06adcdf3d3532aaddc2298db7ba357b23c5352e12e8bdd0f2f",
+  "size": 514930,
   "minLauncher": "1.3.0",
-  "notes": "アプリのアイコンが新しくなりました（結晶の星）。",
+  "notes": "ゲーム中の表示を、縁をドラッグして自由な大きさにできるようになりました。大きさに合わせて、1行・要点・一覧と表示が変わります。",
   "published": "2026-10-21"
 }
