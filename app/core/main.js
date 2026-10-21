@@ -20,7 +20,9 @@ if (!app.requestSingleInstanceLock()) { app.quit(); }
 const APP_ICON = path.join(__dirname, 'renderer', 'icon.png');
 if (process.platform === 'win32') app.setAppUserModelId('local.genshin.ikusei.tracker'); // taskbar uses our icon and groups our windows
 
-let win = null;
+let win = null, quitting = false;
+const alive = (w) => !!w && !w.isDestroyed();
+function showMain() { if (!alive(win)) return; if (win.isMinimized()) win.restore(); win.show(); win.focus(); }
 function createWindow() {
   win = new BrowserWindow({
     width: 1220, height: 880, minWidth: 380, minHeight: 500,
@@ -42,9 +44,16 @@ function createWindow() {
     if (/^https:\/\//.test(url)) shell.openExternal(url);
     return { action: 'deny' };
   });
+  // The overlay gets its list from this window, so while the overlay is showing, closing this window only hides it.
+  // Closing it with the overlay hidden quits the app as before.
+  win.on('close', (e) => {
+    if (!quitting && alive(overlay) && overlay.isVisible()) { e.preventDefault(); win.hide(); }
+  });
+  win.on('closed', () => { win = null; if (alive(overlay)) overlay.destroy(); });
 }
+app.on('before-quit', () => { quitting = true; });
 
-app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
+app.on('second-instance', () => showMain());
 app.whenReady().then(() => { createWindow(); loadOv(); registerHotkeys(); if (OV.visible) showOverlay(); });
 app.on('window-all-closed', () => app.quit());
 app.on('will-quit', () => globalShortcut.unregisterAll());
@@ -67,7 +76,7 @@ function onScreen(x, y) { return screen.getAllDisplays().some((d) => { const a =
 function ovConfig() { return { mode: OV.mode, opacity: OV.opacity, through: OV.through, hotkeyOk }; }
 function sendCfg() {
   if (overlay && !overlay.isDestroyed()) overlay.webContents.send('ov:config', ovConfig());
-  if (win && !win.isDestroyed()) win.webContents.send('ov:config', Object.assign({ visible: OV.visible && !!overlay && overlay.isVisible() }, ovConfig()));
+  if (win && !win.isDestroyed()) win.webContents.send('ov:config', Object.assign({ visible: OV.visible && alive(overlay) && overlay.isVisible() }, ovConfig()));
 }
 function createOverlay() {
   const wa = screen.getPrimaryDisplay().workArea;
@@ -105,11 +114,16 @@ function createOverlay() {
   overlay.on('closed', () => { overlay = null; });
 }
 function showOverlay() {
-  if (!overlay) createOverlay();
+  if (!alive(overlay)) createOverlay();
   const go = () => { overlay.showInactive(); overlay.setAlwaysOnTop(true, 'screen-saver'); OV.visible = true; saveOv(); sendCfg(); };
   if (overlay.webContents.isLoading()) overlay.webContents.once('did-finish-load', go); else go();
 }
-function hideOverlay() { if (overlay) overlay.hide(); OV.visible = false; setThrough(false); saveOv(); sendCfg(); }
+function hideOverlay() {
+  if (alive(overlay)) overlay.hide();
+  OV.visible = false; setThrough(false); saveOv(); sendCfg();
+  // with the main window hidden, hiding the overlay would leave nothing on screen: bring the main window back
+  if (alive(win) && !win.isVisible()) showMain();
+}
 // switch view: resize the window to the size last used for that view
 function setMode(m) {
   OV.mode = m;
@@ -126,7 +140,7 @@ function setThrough(v) {
 }
 // Ctrl+Alt+G: hidden → list → mini → hidden
 function cycleOverlay() {
-  if (!OV.visible || !overlay || !overlay.isVisible()) { showOverlay(); setMode('list'); return; }
+  if (!OV.visible || !alive(overlay) || !overlay.isVisible()) { showOverlay(); setMode('list'); return; }
   if (OV.mode === 'list') { setMode('mini'); return; }
   hideOverlay();
 }
@@ -134,8 +148,8 @@ function registerHotkeys() {
   hotkeyOk.toggle = globalShortcut.register('Control+Alt+G', cycleOverlay);
   hotkeyOk.through = globalShortcut.register('Control+Alt+M', () => { if (OV.visible) setThrough(!OV.through); });
 }
-const fromMain = (e) => win && e.sender === win.webContents;
-const fromOverlay = (e) => overlay && e.sender === overlay.webContents;
+const fromMain = (e) => alive(win) && e.sender === win.webContents;
+const fromOverlay = (e) => alive(overlay) && e.sender === overlay.webContents;
 ipcMain.on('ov:push', (e, state) => {
   if (!fromMain(e)) return;
   const skyChanged = !lastState || lastState.sky !== state.sky;
@@ -161,9 +175,9 @@ ipcMain.on('ov:cmd', (e, cmd) => {
     OV.opacity = Math.round(Math.max(0.4, Math.min(1, OV.opacity + (cmd === 'opacity+' ? 0.1 : -0.1))) * 100) / 100;
     if (overlay) overlay.setOpacity(OV.opacity); saveOv(); sendCfg(); return;
   }
-  if (cmd === 'open-main' && win) { if (win.isMinimized()) win.restore(); win.show(); win.focus(); }
+  if (cmd === 'open-main') showMain();
 });
-ipcMain.handle('ov:get-config', () => Object.assign({ visible: OV.visible && !!overlay && overlay.isVisible() }, ovConfig()));
+ipcMain.handle('ov:get-config', () => Object.assign({ visible: OV.visible && alive(overlay) && overlay.isVisible() }, ovConfig()));
 
 function isSqlite(buf) { return buf && buf.length >= 16 && Buffer.from(buf.subarray(0, 16)).equals(SQLITE_HEADER); }
 function today() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -233,7 +247,7 @@ async function runUpdateCheck() {
   return st;
 }
 ipcMain.on('app:started', (e) => {
-  if (!win || e.sender !== win.webContents) return;
+  if (!fromMain(e)) return;
   console.log('[app] started core', global.__GT.coreVersion);
   updater.markGood();
   if (!updateTimer) { setTimeout(runUpdateCheck, 15000); updateTimer = setInterval(runUpdateCheck, 6 * 3600e3); }
